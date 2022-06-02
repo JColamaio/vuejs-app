@@ -1,19 +1,25 @@
-
 <template>
-
-<div id="app">
+<div id="app" :class="typeof weather.main != 'undefined' && weather.main.temperature > 16 ? 'warm' : ''">
 <main>
   <div class="buscador">
-    <input type="text" class="buscadorcito" placeholder="Search..." />
-    </div>
-    <div class="weather-wrap">
+    <input 
+    type="text" 
+    class="buscadorcito" 
+    placeholder="Search..." 
+    v-model="query" 
+    @keypress="fetchWeather" 
+    />
+  </div>
+
+   <div class="weather-wrap" v-if="typeof weather.main != 'undefined'">
       <div class="location-box">
-        <div class="location"> Buenos Aires, Arg</div>
-        <div class="date"> Lunes 6 junio 2022</div>
+        <div class="location">{{ weather.name }}, {{ weather.sys.country}}</div>
+        <div class="date"> {{ dateBuilder() }}</div>
 </div>
+
       <div class="weather-box">
-        <div class="temperature">9°c </div>
-        <div class="weather">Clear</div>
+        <div class="temperature">{{ Math.round(weather.main.temperature) }}°c </div>
+        <div class="weather"> {{weather.weather[0].main}} </div>
        </div>
     </div> 
 </main>
@@ -28,11 +34,40 @@ export default {
   name: 'app',
   data() {
     return {
-      api_key: '6a49ff79919f709add61a42ef87a1fca'
+      api_key: '6a49ff79919f709add61a42ef87a1fca',
+      url_base:'https://api.openweathermap.org/data/2.5/',
+      query: '',
+      weather: {}
     }
+  },
+  methods: {
+fetchWeather(e) {
+if (e.key ==  "Enter") {
+  fetch(`${this.url_base}weather?q=${this.query}$units=metric&APPID=${this.api_key}`)
+  .then(res => {
+    return res.json();
+  }).then(this.setResults);
   }
-  
+},
+setResults(results) {
+  this.weather = results;
+  },
+  dateBuilder() {
+    let d = new Date();
+    let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    let day = days[d.getDate()];
+    let date = d.getDate();
+    let month = months[d.getMonth()];
+    let year = d.getFullYear();
+
+    return `${day} ${date} ${month} ${year}`;
+  }
 }
+}
+  
+
 </script>
 
 
@@ -55,7 +90,9 @@ body {
   background-position: bottom;
   transition: 0.5s;
 }
-
+#app.warm {
+  background-image: url('./assets/warm.jpg');
+}
 main {
   min-height: 100vh;
   padding: 25px;
@@ -77,7 +114,7 @@ main {
   outline: none;
   background: none;
 
-box-shadow: 0px 0px 15px rgba(0, 0 , 0 ,0.25);
+  box-shadow: 0px 0px 15px rgba(0, 0 , 0 ,0.25);
   background-color: rgba(255, 255, 255 0.5);
   border-radius: 0px 15px 0px 15px;
   transition: 0.4s;
